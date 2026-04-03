@@ -32,6 +32,12 @@ Users can:
 * View summaries (income, expense, balance)
 
 ---
+## ⚡ Key Design Decisions
+
+- Used layered architecture for maintainability and scalability
+- Implemented manual RBAC instead of Spring Security for simplicity
+- Used H2 in-memory database for quick setup and evaluation
+- Designed dashboard API to simulate real-world financial analytics
 
 ## ⚙️ Tech Stack
 
@@ -160,6 +166,18 @@ com.expensetracker
 ```
 
 ---
+## ⚠️ Assumptions
+
+- Role is passed via request header instead of authentication system
+- Data is not persisted permanently (H2 database)
+- Focus is on backend logic, not UI
+
+  ---
+
+  Future Improvements:
+- JWT Authentication
+- MySQL integration
+- Pagination support
 
 ## ✍️ Author
 
