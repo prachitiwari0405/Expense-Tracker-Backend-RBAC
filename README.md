@@ -13,7 +13,7 @@
 
 
 
-![Architecture](screenshots/architecture.png)
+![Architecture](Screenshort/Backend system architecture and dashboard graph.png)
 
 **Flow:**
 Client → Controller → Service → Repository → Database (H2)
