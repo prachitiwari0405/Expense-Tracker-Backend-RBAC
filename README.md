@@ -85,7 +85,7 @@ Users can:
 
 ## 📊 Dashboard Visualization
 
-![Dashboard Graph](screenshots/graph.png)
+![Dashboard Graph](Screenshort/Income and expense comparison dashboard.png)
 
 ---
 
