@@ -93,19 +93,19 @@ Users can:
 
 ### ✅ Create Expense
 
-![Create Expense](screenshots/create.png)
+![Create Expense](ScreenShort/Expense.png)
 
 ### ✅ Get All Expenses
 
-![Get All](screenshots/getall.png)
+![Get All](ScreenShort/Expense.png)
 
 ### ✅ Filter by Category
 
-![Filter](screenshots/filter.png)
+![Filter](Screenshort/delete.png)
 
 ### ✅ Dashboard Summary
 
-![Dashboard](screenshots/dashboard.png)
+![Dashboard](Screenshort/DashBoard.png)
 
 ---
 
