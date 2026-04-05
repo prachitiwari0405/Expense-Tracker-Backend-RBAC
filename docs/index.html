@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Expense Tracker API — RBAC Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --surface: #111827;
+    --surface2: #1a2236;
+    --border: #1e2d45;
+    --accent: #3b82f6;
+    --accent2: #06b6d4;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --purple: #8b5cf6;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Sora', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); line-height: 1.6; }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #0b0f1a 0%, #0f172a 50%, #0b1929 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 0 36px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.12) 0%, transparent 70%);
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(59,130,246,0.15);
+    border: 1px solid rgba(59,130,246,0.35);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+  }
+  header h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 700; letter-spacing: -1px; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--muted); margin-top: 10px; font-size: 15px; font-weight: 300; }
+  .header-meta {
+    display: flex; gap: 24px; justify-content: center; margin-top: 24px; flex-wrap: wrap;
+  }
+  .meta-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--muted);
+  }
+  .meta-pill strong { color: var(--text); }
+
+  /* LAYOUT */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  .layout { display: grid; grid-template-columns: 240px 1fr; gap: 40px; margin-top: 48px; }
+
+  /* SIDEBAR */
+  .sidebar { position: sticky; top: 24px; height: fit-content; }
+  .sidebar nav { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .nav-group-title {
+    padding: 10px 16px 6px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-family: var(--mono);
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+  .nav-group-title:first-child { border-top: none; margin-top: 0; }
+  .sidebar nav a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+  .sidebar nav a:hover { color: var(--text); background: var(--surface2); border-left-color: var(--accent); }
+  .method-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .dot-post { background: var(--green); }
+  .dot-get  { background: var(--accent); }
+  .dot-put  { background: var(--yellow); }
+  .dot-delete { background: var(--red); }
+
+  /* MAIN */
+  main { min-width: 0; padding-bottom: 80px; }
+  .section { margin-bottom: 56px; }
+  .section-title {
+    font-size: 22px; font-weight: 700; margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title .icon { font-size: 18px; }
+
+  /* OVERVIEW CARDS */
+  .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+  .overview-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+  .overview-card:hover { border-color: var(--accent); }
+  .overview-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+  .overview-card .value { font-size: 16px; font-weight: 600; font-family: var(--mono); color: var(--accent2); }
+
+  /* ENDPOINT CARD */
+  .endpoint {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .endpoint:hover { border-color: rgba(59,130,246,0.4); }
+  .endpoint-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .method-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    min-width: 64px;
+    text-align: center;
+  }
+  .method-get    { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+  .method-post   { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+  .method-put    { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+  .method-delete { background: rgba(239,68,68,0.15);  color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .endpoint-path { font-family: var(--mono); font-size: 14px; color: var(--text); flex: 1; }
+  .endpoint-desc { font-size: 13px; color: var(--muted); margin-left: auto; }
+  .role-tag {
+    font-size: 10px; font-family: var(--mono); padding: 2px 8px;
+    border-radius: 4px; border: 1px solid;
+    flex-shrink: 0;
+  }
+  .role-admin  { color: #c084fc; border-color: rgba(192,132,252,0.4); background: rgba(192,132,252,0.08); }
+  .role-user   { color: #67e8f9; border-color: rgba(103,232,249,0.4); background: rgba(103,232,249,0.08); }
+  .role-public { color: #86efac; border-color: rgba(134,239,172,0.4); background: rgba(134,239,172,0.08); }
+
+  .endpoint-body { padding: 0 20px 20px; border-top: 1px solid var(--border); display: none; }
+  .endpoint-body.open { display: block; }
+  .endpoint-body .desc-text { color: var(--muted); font-size: 13px; margin-top: 14px; margin-bottom: 14px; }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: #060b14;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .code-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px; color: var(--muted); font-family: var(--mono);
+  }
+  pre { padding: 14px; font-family: var(--mono); font-size: 12.5px; line-height: 1.7; overflow-x: auto; color: #94a3b8; }
+  .kw { color: #60a5fa; }
+  .str { color: #34d399; }
+  .num { color: #f59e0b; }
+  .cmt { color: #475569; }
+
+  /* PARAMS TABLE */
+  .params-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+  .params-table th { text-align: left; padding: 8px 12px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+  .params-table td { padding: 10px 12px; border-bottom: 1px solid rgba(30,45,69,0.5); color: var(--text); vertical-align: top; }
+  .params-table tr:last-child td { border-bottom: none; }
+  .param-name { font-family: var(--mono); color: var(--accent2); }
+  .param-type { font-family: var(--mono); font-size: 11px; color: #8b5cf6; }
+  .param-required { font-size: 10px; color: #f87171; font-family: var(--mono); }
+  .param-optional { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+
+  /* INFO BLOCK */
+  .info-block {
+    background: rgba(59,130,246,0.07);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .warn-block {
+    background: rgba(245,158,11,0.07);
+    border-left: 3px solid var(--yellow);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  /* RESPONSES */
+  .response-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px; font-size: 13px; }
+  .status-code { font-family: var(--mono); font-size: 12px; padding: 2px 10px; border-radius: 5px; flex-shrink: 0; }
+  .s200 { background: rgba(16,185,129,0.15); color: #34d399; }
+  .s201 { background: rgba(16,185,129,0.15); color: #34d399; }
+  .s400 { background: rgba(245,158,11,0.15); color: #fbbf24; }
+  .s401 { background: rgba(239,68,68,0.15);  color: #f87171; }
+  .s403 { background: rgba(239,68,68,0.15);  color: #f87171; }
+  .s404 { background: rgba(239,68,68,0.15);  color: #f87171; }
+
+  .subsection-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin: 16px 0 10px; font-family: var(--mono); }
+
+  /* BASE URL */
+  .base-url-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-family: var(--mono);
+    font-size: 14px;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .base-url-box .label { color: var(--muted); font-size: 11px; margin-right: 4px; }
+  .base-url-box .url { color: var(--accent2); }
+
+  /* SCROLL */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .overview-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="badge">REST API · v1.0.0</div>
+    <h1>Expense Tracker <span>RBAC</span> API</h1>
+    <p>Spring Boot Backend with Role-Based Access Control &amp; Dashboard APIs</p>
+    <div class="header-meta">
+      <div class="meta-pill"><strong>Java</strong> Spring Boot</div>
+      <div class="meta-pill"><strong>Auth:</strong> JWT Bearer</div>
+      <div class="meta-pill"><strong>Roles:</strong> ADMIN · USER</div>
+      <div class="meta-pill"><strong>Format:</strong> JSON</div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <nav>
+        <div class="nav-group-title">Overview</div>
+        <a href="#overview">📋 Introduction</a>
+        <a href="#auth-section">🔐 Authentication</a>
+
+        <div class="nav-group-title">Auth Endpoints</div>
+        <a href="#ep-register"><span class="method-dot dot-post"></span>Register</a>
+        <a href="#ep-login"><span class="method-dot dot-post"></span>Login</a>
+
+        <div class="nav-group-title">Expenses</div>
+        <a href="#ep-add-expense"><span class="method-dot dot-post"></span>Add Expense</a>
+        <a href="#ep-get-expenses"><span class="method-dot dot-get"></span>Get My Expenses</a>
+        <a href="#ep-get-expense"><span class="method-dot dot-get"></span>Get Expense by ID</a>
+        <a href="#ep-update-expense"><span class="method-dot dot-put"></span>Update Expense</a>
+        <a href="#ep-delete-expense"><span class="method-dot dot-delete"></span>Delete Expense</a>
+
+        <div class="nav-group-title">Dashboard</div>
+        <a href="#ep-summary"><span class="method-dot dot-get"></span>User Summary</a>
+        <a href="#ep-category"><span class="method-dot dot-get"></span>By Category</a>
+        <a href="#ep-monthly"><span class="method-dot dot-get"></span>Monthly Report</a>
+
+        <div class="nav-group-title">Admin</div>
+        <a href="#ep-all-users"><span class="method-dot dot-get"></span>All Users</a>
+        <a href="#ep-all-expenses"><span class="method-dot dot-get"></span>All Expenses</a>
+        <a href="#ep-change-role"><span class="method-dot dot-put"></span>Change Role</a>
+        <a href="#ep-delete-user"><span class="method-dot dot-delete"></span>Delete User</a>
+      </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <main>
+
+      <!-- OVERVIEW -->
+      <section class="section" id="overview">
+        <div class="section-title"><span class="icon">📋</span> Overview</div>
+        <div class="overview-grid">
+          <div class="overview-card"><div class="label">Base URL</div><div class="value">localhost:8080</div></div>
+          <div class="overview-card"><div class="label">API Prefix</div><div class="value">/api/v1</div></div>
+          <div class="overview-card"><div class="label">Auth Type</div><div class="value">JWT Bearer</div></div>
+          <div class="overview-card"><div class="label">Data Format</div><div class="value">JSON</div></div>
+          <div class="overview-card"><div class="label">Roles</div><div class="value">ADMIN · USER</div></div>
+          <div class="overview-card"><div class="label">Framework</div><div class="value">Spring Boot</div></div>
+        </div>
+
+        <div style="margin-top:28px">
+          <div class="base-url-box">
+            <span class="label">BASE URL</span>
+            <span class="url">http://localhost:8080/api/v1</span>
+          </div>
+          <div class="info-block">
+            This API uses <strong>Role-Based Access Control (RBAC)</strong>. Endpoints are protected by roles: <code>ADMIN</code> has full access, <code>USER</code> can manage only their own data. All protected routes require a valid JWT token in the <code>Authorization</code> header.
+          </div>
+        </div>
+      </section>
+
+      <!-- AUTH INFO -->
+      <section class="section" id="auth-section">
+        <div class="section-title"><span class="icon">🔐</span> Authentication</div>
+        <p style="color:var(--muted);font-size:14px;margin-bottom:16px;">All protected endpoints require a Bearer token obtained from the login endpoint.</p>
+        <div class="code-block">
+          <div class="code-header"><span>HTTP Header</span></div>
+          <pre><span class="kw">Authorization</span>: Bearer <span class="str">&lt;your_jwt_token&gt;</span></pre>
+        </div>
+        <div class="warn-block">Tokens expire after <strong>24 hours</strong>. Re-authenticate to get a new token. Admin-only routes return <code>403 Forbidden</code> if accessed with a USER role token.</div>
+      </section>
+
+      <!-- AUTH ENDPOINTS -->
+      <section class="section" id="auth-endpoints">
+        <div class="section-title"><span class="icon">🔑</span> Authentication Endpoints</div>
+
+        <!-- Register -->
+        <div class="endpoint" id="ep-register">
+          <div class="endpoint-header" onclick="toggle(this)">
+            <span class="method-badge method-post">POST</span>
+            <span class="endpoint-path">/auth/register</span>
+            <span class="role-tag role-public">PUBLIC</span>
+            <span class="endpoint-desc">Register new user</span>
+          </div>
+          <div class="endpoint-body open">
+            <p class="desc-text">Creates a new user account. Default role is <code>USER</code>. Passwords are stored as bcrypt hashes.</p>
+            <div class="subsection-title">Request Body</div>
+            <div class="code-block">
+              <div class="code-header"><span>application/json</span></div>
+              <pre>{
+  <span class="str">"name"</span>:     <span class="str">"Prachi Tiwari"</span>,
+  <span class="str">"email"</span>:    <span class="str">"prachi@example.com"</span>,
+  <span class="str">"password"</span>: <span class="str">"SecurePass@123"</span>
+}</pre>
+            </div>
+            <div class="subsection-title">Parameters</div>
+            <table class="params-table">
+              <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+              <tr><td class="param-name">name</td><td class="param-type">String</td><td class="param-required">required</td><td style="color:var(--muted)">Full name of the user</td></tr>
+              <tr><td class="param-name">email</td><td class="param-type">String</td><td class="param-required">required</td><td style="color:var(--muted)">Unique email address</td></tr>
+              <tr><td class="param-name">password</td><td class="param-type">String</td><td class="param-required">required</td><td style="color:var(--muted)">Minimum 8 characters</td></tr>
+            </table>
+            <div class="subsection-title">Responses</div>
+            <div class="response-row"><span class="status-code s201">201</span><span style="color:var(--muted)">User registered successfully. Returns user object without password.</span></div>
+            <div class="response-row"><span class="status-code s400">400</span><span style="color:var(--muted)">Validation error or email already exists.</span></div>
+          </div>
+        </div>
+
+        <!-- Login -->
+        <div class="endpoint" id="ep-login">
+          <div class="endpoint-header" onclick="toggle(this)">
+            <span class="method-badge method-post">POST</span>
+            <span class="endpoint-path">/auth/login</span>
+            <span class="role-tag role-public">PUBLIC</span>
+            <span class="endpoint-desc">Authenticate &amp; get JWT</span>
+          </div>
+          <div class="endpoint-body">
+            <p class="desc-text">Authenticates the user and returns a JWT token for subsequent requests.</p>
+            <div class="subsection-title">Request Body</div>
+            <div class="code-block">
+              <div class="code-header"><span>application/json</span></div>
+              <pre>{
+  <span class="str">"email"</span>:    <span class="str">"prachi@example.com"</span>,
+  <span class="str">"password"</span>: <span class="str">"SecurePass@123"</span>
+}</pre>
+            </div>
+            <div class="subsection-title">Response 200 OK</div>
+            <div class="code-block">
+              <div class="code-header"><span>application/json</span></div>
+              <pre>{
+  <span class="str">"token"</span>: <span class="str">"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."</span>,
+  <span class="str">"type"</span>:  <span class="str">"Bearer"</span>,
+  <span class="str">"role"</span>:  <span class="str">"USER"</span>,
+  <span class="str">"email"</span>: <span class="str">"prachi@example.com"</span>
+}</pre>
+            </div>
+            <div class="response-row"><span class="status-code s200">200</span><span style="color:var(--muted)">Returns JWT token and user role.</span></div>
+            <div class="response-row"><span class="status-code s401">401</span><span style="color:var(--muted)">Invalid credentials.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- EXPENSE ENDPOINTS -->
+      <section class="section" id="expense-endpoints">
+        <div class="section-title"><span class="icon">💸</span> Expense Endpoints</div>
+
+        <!-- Add Expense -->
+        <div class="endpoint" id="ep-add-expense">
+          <div class="endpoint-header" onclick="toggle(this)">
+            <span class="method-badge method-post">POST</span>
+            <span class="endpoint-path">/expenses</span>
+            <span class="role-tag role-user">USER</span>
+            <span class="endpoint-desc">Add new expense</span>
+          </div>
+          <div class="endpoint-body">
+            <p class="desc-text">Creates a new expense entry for the authenticated user.</p>
+            <div class="subsection-title">Request Body</div>
+            <div class="code-block">
+              <div class="code-header"><span>application/json</span></div>
+              <pre>{
+  <span class="str">"title"</span>:       <span class="str">"Grocery Shopping"</span>,
+  <span class="str">"amount"</span>:      <span class="num">1250.50</span>,
+  <span class="str">"category"</span>:    <span class="str">"FOOD"</span>,
+  <span class="str">"date"</span>:        <span class="str">"2025-04-05"</span>,
+  <span class="str">"description"</span>: <span class="str">"Weekly groceries from BigBazaar"</span>
+}</pre>
+            </div>
+            <div class="subsection-title">Parameters</div>
+            <table class="params-table">
+              <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+              <tr><td class="param-name">title</td><td class="param-type">String</td><td class="param-required">required</td><td style="color:var(--muted)">Short label for the expense</td></tr>
+              <tr><td class="param-name">amount</td><td class="param-type">Double</td><td class="param-required">required</td><td style="color:var(--muted)">Expense amount (positive)</td></tr>
+              <tr><td class="param-name">category</td><td class="param-type">String</td><td class="param-required">required</td><td style="color:var(--muted)">FOOD · TRANSPORT · HEALTH · SHOPPING · UTILITIES · ENTERTAINMENT · OTHER</td></tr>
+              <tr><td class="param-name">date</td><td class="param-type">LocalDate</td><td class="param-required">required</td><td style="color:var(--muted)">Format: YYYY-MM-DD</td></tr>
+              <tr><td class="param-name">description</td><td class="param-type">String</td><td class="param-optional">optional</td><td style="color:var(--muted)">Additional notes</td></tr>
+            </table>
+            <div class="response-row"><span class="status-code s201">201</span><span style="color:var(--muted)">Expense created. Returns expense object with generated ID.</span></div>
+            <div class="response-row"><span class="status-code s400">400</span><span style="color:var(--muted)">Validation failed.</span></div>
+            <div class="response-row"><span class="status-code s401">401</span><span style="color:var(--muted)">Unauthorized — missing or invalid token.</span></div>
+          </div>
+        </div>
+
+        <!-- Get Expenses -->
+        <div class="endpoint" id="ep-get-expenses">
+          <div class="endpoint-header" onclick="toggle(this)">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/expenses</span>
+            <span class="role-tag role-user">USER</span>
+            <span class="endpoint-desc">Get all my expenses</span>
+          </div>
+          <div class="endpoint-body">
+            <p class="desc-text">Returns all expenses for the currently authenticated user. Supports filtering and pagination.</p>
+            <div class="subsection-title">Query Parameters</div>
+            <table class="params-table">
+              <tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr>
+              <tr><td class="param-name">category</td><td class="param-type">String</td><td class="param-optional">optional</td><td style="color:var(--muted)">Filter by category</td></tr>
+              <tr><td class="param-name">startDate</td><td class="param-type">LocalDate</td><td class="param-optional">optional</td><td style="color:var(--muted)">Filter from date (YYYY-MM-DD)</td></tr>
+              <tr><td class="param-name">endDate</td><td class="param-type">LocalDate</td><td class="param-optional">optional</td><td style="color:var(--muted)">Filter to date (YYYY-MM-DD)</td></tr>
+              <tr><td class="param-name">page</td><td class="param-type">Integer</td><td class="param-optional">optional</td><td style="color:var(--muted)">Page number (default: 0)</td></tr>
+              <tr><td class="param-name">size</td><td class="param-type">Integer</td><td class="param-optional">optional</td><td style="color:var(--muted)">Page size (default: 10)</td></tr>
+            </table>
+            <div class="subsection-title">Response 200 OK</div>
+            <div class="code-block">
+              <div class="code-header"><span>application/json</span></div>
+              <pre>{
+  <span class="str">"content"</span>: [
+    {
+      <span class="str">"id"</span>:          <span class="num">1</span>,
+      <span class="str">"title"</span>:       <span class="str">"Grocery Shopping"</span>,
+      <span class="str">"amount"</span>:      <span class="num">1250.50</span>,
+      <span class="str">"category"</span>:    <span class="str">"FOOD"</span>,
+      <span class="str">"date"</span>:        <span class="str">"2025-04-05"</span>,
+      <span class="str">"description"</span>: <span class="str">"Weekly groceries"</span>
+    }
+  ],
+  <span class="str">"totalElements"</span>: <span class="num">42</span>,
+  <span class="str">"totalPages"</span>:    <span class="num">5</span>,
+  <span class="str">"page"</span>:          <span class="num">0</span>
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Get by ID -->
+        <div class="endpoint" id="ep-get-expense">
+          <div class="endpoint-header" onclick="toggle(this)">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/expenses/{id}</span>
+            <span class="role-tag role-user">USER</span>
+            <span class="endpoint-desc">Get expense by ID</span>
+          </div>
+          <div class="endpoint-body">
+            <p class="desc-text">Returns a single expense by its ID. Users can only access their own expenses.</p>
+            <div class="response-row"><span class="status-code s200">200</span><span style="color:var(--muted)">Returns expense object.</span></div>
+            <div class="response-row"><span class="status-code s404">404</span><span style="color:var(--muted)">Expense not found or doesn't belong to user.</span></div>
+          </div>
+        </div>
+
+        <!-- Update -->
+        <div class="endpoint" id="ep-update-expense">
+          <div class="endpoint-header" onclick="toggle(this)">
+            <span class="method-badge method-put">PUT</span>
+            <span class="endpoint-path">/expenses/{id}</span>
+            <span class="role-tag role-user">USER</span>
+            <span class="endpoint-desc">Update an expense</span>
+          </div>
+          <div class="endpoint-body">
+            <p class="desc-text">Updates an existing expense. All fields are optional — only provided fields will be updated.</p>
+            <div class="code-block">
+              <div class="code-header"><span>application/json</span></div>
+              <pre>{
+  <span class="str">"amount"</span>:   <span class="num">1500.00</span>,
+  <span class="str">"category"</span>: <span class="str">"SHOPPING"</span>
+}</pre>
+            </div>
+            <div class="response-row"><span class="status-code s200">200</span><span style="color:var(--muted)">Returns updated expense.</span></div>
+            <div class="response-row"><span class="status-code s404">404</span><span style="color:var(--muted)">Expense not found.</span></div>
+          </div>
+        </div>
+
+        <!-- Delete -->
+        <div class="endpoint" id="ep-delete-expense">
+          <div class="endpoint-header" onclick="toggle(this)">
+            <span class="method-badge method-delete">DELETE</span>
+            <span class="endpoint-path">/expenses/{id}</span>
+            <span class="role-tag role-user">USER</span>
+            <span class="endpoint-desc">Delete an expense</span>
+          </div>
+          <div class="endpoint-body">
+            <p class="desc-text">Permanently deletes an expense by ID. Only the expense owner can delete it.</p>
+            <div class="response-row"><span class="status-code s200">200</span><span style="color:var(--muted)">Expense deleted successfully.</span></div>
+            <div class="response-row"><span class="status-code s404">404</span><span style="color:var(--muted)">Expense not found.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DASHBOARD -->
+      <section class="section" id="dashboard-endpoints">
+        <div class="section-title"><span class="icon">📊</span> Dashboard Endpoints</div>
+
+        <div class="endpoint" id="ep-summary">
+          <div class="endpoint-header" onclick="toggle(this)">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/dashboard/summary</span>
+            <span class="role-tag role-user">USER</span>
+            <span class="endpoint-desc">User expense summary</span>
+          </div>
+          <div class="endpoint-body">
+            <p class="desc-text">Returns an aggregated summary of the user's expenses including totals and counts.</p>
+            <div class="code-block">
+              <div class="code-header"><span>Response 200 OK</span></div>
+              <pre>{
+  <span class="str">"totalExpenses"</span>:   <span class="num">45230.75</span>,
+  <span class="str">"totalThisMonth"</span>:  <span class="num">8450.00</span>,
+  <span class="str">"totalThisYear"</span>:   <span class="num">38200.00</span>,
+  <span class="str">"expenseCount"</span>:    <span class="num">42</span>,
+  <span class="str">"highestExpense"</span>:  <span class="num">5000.00</span>,
+  <span class="str">"lowestExpense"</span>:   <span class="num">25.00</span>
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="endpoint" id="ep-category">
+          <div class="endpoint-header" onclick="toggle(this)">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/dashboard/by-category</span>
+            <span class="role-tag role-user">USER</span>
+            <span class="endpoint-desc">Expenses by category</span>
+          </div>
+          <div class="endpoint-body">
+            <p class="desc-text">Returns total spending grouped by category for the authenticated user.</p>
+            <div class="code-block">
+              <div class="code-header"><span>Response 200 OK</span></div>
+              <pre>[
+  { <span class="str">"category"</span>: <span class="str">"FOOD"</span>,        <span class="str">"total"</span>: <span class="num">12500.00</span>, <span class="str">"count"</span>: <span class="num">18</span> },
+  { <span class="str">"category"</span>: <span class="str">"TRANSPORT"</span>,   <span class="str">"total"</span>: <span class="num">4300.00</span>,  <span class="str">"count"</span>: <span class="num">10</span> },
+  { <span class="str">"category"</span>: <span class="str">"UTILITIES"</span>,   <span class="str">"total"</span>: <span class="num">3200.00</span>,  <span class="str">"count"</span>: <span class="num">6</span>  },
+  { <span class="str">"category"</span>: <span class="str">"ENTERTAINMENT"</span>,<span class="str">"total"</span>: <span class="num">2100.00</span>,  <span class="str">"count"</span>: <span class="num">8</span>  }
+]</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="endpoint" id="ep-monthly">
+          <div class="endpoint-header" onclick="toggle(this)">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/dashboard/monthly-report</span>
+            <span class="role-tag role-user">USER</span>
+            <span class="endpoint-desc">Monthly breakdown</span>
+          </div>
+          <div class="endpoint-body">
+            <p class="desc-text">Returns month-wise expense breakdown for chart visualization. Optionally filter by year.</p>
+            <table class="params-table">
+              <tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr>
+              <tr><td class="param-name">year</td><td class="param-type">Integer</td><td class="param-optional">optional</td><td style="color:var(--muted)">Filter by year (default: current year)</td></tr>
+            </table>
+            <div class="code-block" style="margin-top:12px">
+              <div class="code-header"><span>Response 200 OK</span></div>
+              <pre>[
+  { <span class="str">"month"</span>: <span class="str">"JANUARY"</span>,  <span class="str">"year"</span>: <span class="num">2025</span>, <span class="str">"total"</span>: <span class="num">6200.00</span> },
+  { <span class="str">"month"</span>: <span class="str">"FEBRUARY"</span>, <span class="str">"year"</span>: <span class="num">2025</span>, <span class="str">"total"</span>: <span class="num">5800.00</span> },
+  { <span class="str">"month"</span>: <span class="str">"MARCH"</span>,    <span class="str">"year"</span>: <span class="num">2025</span>, <span class="str">"total"</span>: <span class="num">7100.00</span> }
+]</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADMIN -->
+      <section class="section" id="admin-endpoints">
+        <div class="section-title"><span class="icon">🛡️</span> Admin Endpoints</div>
+        <div class="info-block">All admin endpoints require a JWT token with role <code>ADMIN</code>. Requests from <code>USER</code> role will receive <code>403 Forbidden</code>.</div>
+
+        <div class="endpoint" id="ep-all-users">
+          <div class="endpoint-header" onclick="toggle(this)">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/admin/users</span>
+            <span class="role-tag role-admin">ADMIN</span>
+            <span class="endpoint-desc">Get all users</span>
+          </div>
+          <div class="endpoint-body">
+            <p class="desc-text">Returns a paginated list of all registered users in the system.</p>
+            <div class="code-block">
+              <div class="code-header"><span>Response 200 OK</span></div>
+              <pre>[
+  { <span class="str">"id"</span>: <span class="num">1</span>, <span class="str">"name"</span>: <span class="str">"Prachi Tiwari"</span>, <span class="str">"email"</span>: <span class="str">"prachi@example.com"</span>, <span class="str">"role"</span>: <span class="str">"USER"</span> },
+  { <span class="str">"id"</span>: <span class="num">2</span>, <span class="str">"name"</span>: <span class="str">"Admin User"</span>,    <span class="str">"email"</span>: <span class="str">"admin@example.com"</span>,  <span class="str">"role"</span>: <span class="str">"ADMIN"</span> }
+]</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="endpoint" id="ep-all-expenses">
+          <div class="endpoint-header" onclick="toggle(this)">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/admin/expenses</span>
+            <span class="role-tag role-admin">ADMIN</span>
+            <span class="endpoint-desc">Get all expenses</span>
+          </div>
+          <div class="endpoint-body">
+            <p class="desc-text">Returns all expenses from all users across the platform.</p>
+            <div class="response-row"><span class="status-code s200">200</span><span style="color:var(--muted)">Paginated list of all expenses with user info.</span></div>
+          </div>
+        </div>
+
+        <div class="endpoint" id="ep-change-role">
+          <div class="endpoint-header" onclick="toggle(this)">
+            <span class="method-badge method-put">PUT</span>
+            <span class="endpoint-path">/admin/users/{id}/role</span>
+            <span class="role-tag role-admin">ADMIN</span>
+            <span class="endpoint-desc">Change user role</span>
+          </div>
+          <div class="endpoint-body">
+            <p class="desc-text">Promotes or demotes a user's role. Allows switching between <code>USER</code> and <code>ADMIN</code>.</p>
+            <div class="code-block">
+              <div class="code-header"><span>application/json</span></div>
+              <pre>{ <span class="str">"role"</span>: <span class="str">"ADMIN"</span> }</pre>
+            </div>
+            <div class="response-row"><span class="status-code s200">200</span><span style="color:var(--muted)">Role updated. Returns updated user object.</span></div>
+            <div class="response-row"><span class="status-code s404">404</span><span style="color:var(--muted)">User not found.</span></div>
+          </div>
+        </div>
+
+        <div class="endpoint" id="ep-delete-user">
+          <div class="endpoint-header" onclick="toggle(this)">
+            <span class="method-badge method-delete">DELETE</span>
+            <span class="endpoint-path">/admin/users/{id}</span>
+            <span class="role-tag role-admin">ADMIN</span>
+            <span class="endpoint-desc">Delete a user</span>
+          </div>
+          <div class="endpoint-body">
+            <p class="desc-text">Permanently deletes a user and all their associated expense data.</p>
+            <div class="response-row"><span class="status-code s200">200</span><span style="color:var(--muted)">User and data deleted.</span></div>
+            <div class="response-row"><span class="status-code s404">404</span><span style="color:var(--muted)">User not found.</span></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  function toggle(header) {
+    const body = header.nextElementSibling;
+    body.classList.toggle('open');
+  }
+</script>
+</body>
+</html>
